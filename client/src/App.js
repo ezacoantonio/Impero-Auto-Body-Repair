@@ -38,12 +38,17 @@ export default function App() {
           overflow: "auto",
         }}
       >
-        <Button onClick={() => setSidebarOpen(!sidebarOpen)} sx={{ mb: 2 }}>
+        <Button
+          color="error"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          sx={{ mb: 2 }}
+        >
           {sidebarOpen ? "◀ Hide Sidebar" : "Show Sidebar ▶"}
         </Button>
-
         {/* Render current page */}
-        {PAGE_CONFIG.find((page) => page.name === currentPage)?.component}
+        {React.createElement(
+          PAGE_CONFIG.find((page) => page.name === currentPage)?.component
+        )}{" "}
       </Box>
     </Box>
   );

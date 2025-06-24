@@ -35,8 +35,8 @@ export default function Sidebar({ pages, currentPage, setCurrentPage }) {
           src="https://example.com/path/to/your/logo.png" // Your logo URL here
           alt="Brand Logo"
           sx={{
-            width: 64,
-            height: 64,
+            width: 130,
+            height: 100,
             mb: 2,
             borderRadius: "50%", // Makes it circular
             objectFit: "cover", // Ensures proper image scaling
@@ -46,11 +46,11 @@ export default function Sidebar({ pages, currentPage, setCurrentPage }) {
           }}
           onError={(e) => {
             e.target.src =
-              "https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=178,fit=crop,q=95/YX4PQ9a3yZIv02LO/dall_e_2024-06-26_19.54.59_-_a_minimalist_logo_of_a_mountain_with_three_peaks__the_middle_peak_being_the_highest__in_a_circular_frame._the_mountains_are_green_with_a_slightly_ligh-removebg-preview-dWxlX9DnXzH7JJoy.png"; // Fallback if URL fails
+              "https://i.postimg.cc/dtmPHX3s/Screenshot-2025-06-21-at-11-33-49-AM.png"; // Fallback if URL fails
           }}
         />
         <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
-          KorebTech
+          Impero Auto Body Repair
         </Typography>
       </Box>
 
