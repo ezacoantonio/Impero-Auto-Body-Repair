@@ -1,22 +1,36 @@
 const express = require("express");
 const router = express.Router();
 const { check, validationResult } = require("express-validator");
+
 const {
   createClient,
   getClients,
-  deleteClient, // Now properly destructured
+  deleteClient,
+  updateClient,
 } = require("../controllers/clientController");
 
-const validateClient = [
+// Validation for creating a client
+const validateNewClient = [
   check("plateNumber").not().isEmpty().trim(),
   check("name").not().isEmpty().trim(),
   check("phone").isMobilePhone().trim(),
   check("email").optional().isEmail().normalizeEmail(),
 ];
 
+// Validation for updating a client
+const validateUpdateClient = [
+  check("name").optional().trim(),
+  check("phone").optional().trim(),
+  check("email").optional().isEmail().normalizeEmail(),
+  check("vehicleImage").optional().isString().trim(),
+];
+
+// ===== Routes =====
+
+// Create a new client
 router.post(
   "/",
-  validateClient,
+  validateNewClient,
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -24,10 +38,27 @@ router.post(
     }
     next();
   },
-  createClient // Use the destructured version
+  createClient
 );
 
-router.get("/", getClients); // Use the destructured version
-router.delete("/:plateNumber", deleteClient); // Now this will work
+// Update a client by MongoDB _id
+router.put(
+  "/:id",
+  validateUpdateClient,
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+  },
+  updateClient
+);
+
+// Get all clients
+router.get("/", getClients);
+
+// Delete a client by plate number
+router.delete("/:plateNumber", deleteClient);
 
 module.exports = router;

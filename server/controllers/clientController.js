@@ -56,3 +56,39 @@ exports.deleteClient = async (req, res) => {
     });
   }
 };
+
+exports.updateClient = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const allowedFields = [
+      "plateNumber",
+      "name",
+      "phone",
+      "email",
+      "vehicleImage",
+      "status",
+    ];
+
+    const updateData = {};
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined) {
+        updateData[key] = req.body[key];
+      }
+    }
+
+    const updatedClient = await Client.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updatedClient) {
+      return res.status(404).json({ error: "Client not found" });
+    }
+
+    res.status(200).json(updatedClient);
+  } catch (error) {
+    console.error("Update Error:", error);
+    res.status(400).json({ error: error.message });
+  }
+};

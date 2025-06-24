@@ -31,3 +31,7 @@ export const deleteClient = async (plateNumber) => {
     throw error.response?.data?.error || "Failed to delete client";
   }
 };
+export const updateClient = async (id, data) => {
+  const res = await axios.put(`http://localhost:5001/api/clients/${id}`, data);
+  return res.data;
+};

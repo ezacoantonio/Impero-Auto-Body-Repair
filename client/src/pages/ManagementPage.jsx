@@ -56,7 +56,7 @@ export default function ManagementPage() {
   };
 
   return (
-    <Box sx={{ p: isMobile ? 2 : 3, height: "100vh", overflow: "hidden" }}>
+    <Box sx={{ p: isMobile ? 2 : 3, overflowY: "auto" }}>
       <AlertMessage
         open={alert.open}
         severity={alert.severity}
