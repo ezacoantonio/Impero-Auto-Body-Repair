@@ -1,44 +1,84 @@
+// server/src/controllers/invoiceController.js
 import Client from "../models/Client.js";
+
 const HST_RATE = Number(process.env.HST_RATE ?? 0.13);
 
-// Invoice only counts services that are DONE (100%)
+// GET /api/invoices/:id
 export const generateInvoice = async (req, res) => {
   const client = await Client.findById(req.params.id);
   if (!client) return res.status(404).json({ error: "Client not found" });
 
-  const services = client.serviceRecommendations.filter((r) => r.done);
-  const servicesSubtotal = services.reduce((sum, r) => sum + (r.price || 0), 0);
-  const expensesSubtotal = client.expenses.reduce(
-    (sum, e) => sum + (e.cost || 0),
-    0
-  );
-  const includeExpenses = true;
+  // Services: only include DONE ones on the invoice
+  const doneServices = client.serviceRecommendations.filter((r) => r.done);
+  const servicesItems = doneServices.map((s) => ({
+    name: s.name,
+    price: Number(s.price || 0),
+    progress: Number(s.progress ?? 0),
+    done: !!s.done,
+    type: "service",
+    _id: s._id,
+  }));
 
-  const subtotal = servicesSubtotal + (includeExpenses ? expensesSubtotal : 0);
-  const tax = +(subtotal * HST_RATE).toFixed(2);
+  // Expenses: include all
+  const expenseItems = client.expenses.map((e) => ({
+    name: e.item,
+    price: Number(e.cost || 0),
+    type: "expense",
+    _id: e._id,
+  }));
+
+  // Flat list for the UI
+  const items = [...servicesItems, ...expenseItems];
+
+  // Totals (top level to match the React component)
+  const subtotal = +items
+    .reduce((sum, it) => sum + Number(it.price || 0), 0)
+    .toFixed(2);
+  const taxRate = HST_RATE;
+  const tax = +(subtotal * taxRate).toFixed(2);
   const total = +(subtotal + tax).toFixed(2);
 
+  // Human invoice status (no payment model yet, so infer from work state)
+  const totalServices = client.serviceRecommendations.length;
+  const completedServices = client.serviceRecommendations.filter(
+    (r) => r.done
+  ).length;
+  let status = "UNPAID"; // default label
+
+  if (totalServices === 0) {
+    status = "DRAFT";
+  } else if (completedServices === totalServices) {
+    status = "COMPLETE";
+  } else if (
+    client.serviceRecommendations.some((r) => Number(r.progress ?? 0) > 0)
+  ) {
+    status = "IN PROGRESS";
+  } else {
+    status = "DRAFT";
+  }
+
+  // Optional: lightweight invoice number
+  const invoiceNumber = `${String(
+    client.plateNumber || ""
+  ).toUpperCase()}-${Date.now().toString().slice(-6)}`;
+
   res.json({
+    invoiceNumber,
+    date: new Date().toISOString(),
+    status,
+    taxRate,
+    subtotal,
+    tax,
+    total,
+    // the UI reads this:
+    items,
+    // context
     client: {
+      _id: client._id,
       fullName: client.fullName,
       phone: client.phone,
       plateNumber: client.plateNumber,
       vehicle: client.vehicle,
     },
-    services: services.map((s) => ({
-      name: s.name,
-      price: s.price,
-      progress: s.progress,
-    })),
-    expenses: includeExpenses ? client.expenses : [],
-    amounts: {
-      servicesSubtotal: +servicesSubtotal.toFixed(2),
-      expensesSubtotal: includeExpenses ? +expensesSubtotal.toFixed(2) : 0,
-      subtotal: +subtotal.toFixed(2),
-      taxRate: HST_RATE,
-      tax,
-      total,
-    },
-    generatedAt: new Date().toISOString(),
   });
 };

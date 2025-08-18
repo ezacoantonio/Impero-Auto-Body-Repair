@@ -34,6 +34,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import buildInvoiceHtml from "../utils/invoiceHtml";
 
 const isObjectId = (s) => typeof s === "string" && /^[0-9a-fA-F]{24}$/.test(s);
 
@@ -278,7 +279,33 @@ export default function ClientDetails() {
     });
     await load();
   };
+  const openPrintableInvoice = async () => {
+    // Get the fresh invoice data from your API
+    const { data } = await api.get(`/invoices/${client._id}`);
+    // Build the HTML doc
+    const html = buildInvoiceHtml(data, {
+      logoUrl: "/logo.png", // or a full URL
+      bgUrl: "/invoice-bg.jpg", // or a full URL
+      invoiceTitle: "Invoice",
+    });
 
+    // Open a new tab and write HTML
+    const win = window.open("", "_blank", "width=900,height=650");
+    if (!win) {
+      alert("Please allow popups to view the invoice.");
+      return;
+    }
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+
+    // Optional: auto-print once loaded
+    win.onload = () => {
+      win.focus();
+      win.print();
+      // win.close(); // uncomment if you want to auto-close after printing
+    };
+  };
   return (
     <Container sx={{ py: 2 }}>
       <Stack
@@ -305,6 +332,9 @@ export default function ClientDetails() {
             startIcon={<DeleteForeverIcon />}
           >
             Delete Client
+          </Button>
+          <Button variant="outlined" onClick={openPrintableInvoice}>
+            View / Print (HTML → PDF)
           </Button>
         </Stack>
       </Stack>
